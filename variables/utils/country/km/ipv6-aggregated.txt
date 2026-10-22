@@ -1,0 +1,7 @@
+# Country: Comoros (KM)
+# Address family: IPv6
+# Delegation status: Allocated || Assigned
+# Export mode: Aggregated
+#
+2c0f:f2c8::/32
+2c0f:f560::/32

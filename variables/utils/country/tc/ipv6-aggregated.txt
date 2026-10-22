@@ -1,0 +1,6 @@
+# Country: Turks & Caicos Islands (TC)
+# Address family: IPv6
+# Delegation status: Allocated || Assigned
+# Export mode: Aggregated
+#
+2602:ff48::/36

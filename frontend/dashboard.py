@@ -115,6 +115,14 @@ class Dashboard:
         self.netscan                          = net_scan_panel
         self.ids_panel                        = ids_panel
         self.ip_scan_panel                    = mass_ip_scanner
+        self.ip_country_options               = sorted({
+            country for country, _ in self.ip_scan_panel.country_blocks
+        })
+        self.ip_country_index                 = 0
+        self.ip_selected_country              = None
+        self.ip_country_mode                  = False
+
+
         self.arp_poison_panel                 = arp_p
         self.arp_poison_mode                  = arp_poison
 
@@ -539,9 +547,20 @@ class Dashboard:
             f"  Status   : {status}",
             dash,
         ]
+        # ── country selection ───────────────────────────────────────────────
+        if self.ip_country_mode:
+            if not self.ip_country_options:
+                lines += [" No countries loaded.", " Press ESC to cancel."]
+            else:
+                country = self.ip_country_options[self.ip_country_index]
+                lines += [
+                    " Select country (Left/Right):",
+                    f" > {country}",
+                    " ENTER to choose | ESC to cancel",
+                ]
 
         # ── thread count prompt ───────────────────────────────────────────────
-        if self.ip_input_mode == "ip_threads":
+        elif self.ip_input_mode == "ip_threads":
             lines += [
                 "  Enter thread count (default 250):",
                 f"  > {self.ip_input_buffer}█",
@@ -556,10 +575,10 @@ class Dashboard:
             errors   = getattr(p, "errors",        0)
             threads  = getattr(p, "threads",       0)
             hit_rate = f"{(online / scanned * 100):.3f}%" if scanned > 0 else "0.000%"
-            blocks   = getattr(p, "scanned blocks",0)
+            blocks   = getattr(p, "scanned_blocks",0)
 
             lines += [
-                f"  Scanned  : {scanned:,}",
+                f"  Scanned  : {scanned:,}",~
                 f"  Online   : {online:,}",
                 f"  Hit Rate : {hit_rate}",
                 f"  Offline  : {errors:,}",
@@ -899,6 +918,24 @@ class Dashboard:
                     elif not key.is_sequence:
                         self.arp_input_buffer += str(key)
                     continue
+                if self.ip_country_mode:
+                    if key.code == self.term.KEY_ESCAPE:
+                        self.ip_country_mode = False
+                        self.ip_scan_state   = 1   
+                    elif key.code == self.term.KEY_LEFT and self.ip_country_options:
+                        self.ip_country_index = (
+                            self.ip_country_index - 1
+                        ) % len(self.ip_country_options)
+                    elif key.code == self.term.KEY_RIGHT and self.ip_country_options:
+                        self.ip_country_index = (
+                            self.ip_country_index + 1
+                        ) % len(self.ip_country_options)
+                    elif key.code == self.term.KEY_ENTER and self.ip_country_options:
+                        self.ip_selected_country = self.ip_country_options[self.ip_country_index]
+                        self.ip_country_mode = False
+                        self.ip_input_mode = "ip_threads"
+                        self.ip_input_buffer = ""
+                    continue
 
                 # ── IP scan thread-count input intercept ──────────────────────
                 if self.ip_input_mode == "ip_threads":
@@ -907,7 +944,9 @@ class Dashboard:
                         threads = int(raw) if raw.isdigit() and int(raw) > 0 else 250
                         self.ip_input_mode   = False
                         self.ip_input_buffer = ""
-                        self.ip_scan_panel.start(threads=threads)
+                        blocks = self.ip_scan_panel.blocks_for_country(self.ip_selected_country)
+                        self.ip_scan_panel.start(threads=threads, blocks=blocks)
+
                     elif key.code == self.term.KEY_ESCAPE:
                         self.ip_input_mode   = False
                         self.ip_input_buffer = ""
@@ -1018,26 +1057,31 @@ class Dashboard:
 
                 elif k == "m":
                     if self.ip_scan_state == 0:             # open panel
-                        self.ip_scan_state                   = 1
-                        self.ip_scan_mode                    = True
+                        self.ip_scan_state = 1
+                        self.ip_scan_mode  = True
                         self.ids_mode = self.netscan_mode = self.operator_mode = False
 
-                    elif self.ip_scan_state == 1:           # prompt thread count, then scan
-                        self.ip_scan_state                   = 2
-                        self.ip_input_mode                   = "ip_threads"
-                        self.ip_input_buffer                 = ""
+                    elif self.ip_scan_state == 1:           # choose country (if any), then prompt threads
+                        if not self.ip_country_options:
+                            self.ip_selected_country = None          # no countries available — scan all
+                            self.ip_scan_state   = 2
+                            self.ip_input_mode   = "ip_threads"
+                            self.ip_input_buffer = ""
+                        else:
+                            self.ip_country_index = 0
+                            self.ip_country_mode  = True
+                            self.ip_scan_state    = 2
+                            # ip_input_mode is set later, once a country is actually chosen (ENTER below)
 
                     elif self.ip_scan_state == 2:           # stop scan
-                        self.ip_scan_state                   = 3
-                        self.ip_scan_panel.scanning          = False   # signal worker threads to exit
-                        self.ip_input_mode                   = False   # cancel prompt if still open
+                        self.ip_scan_state          = 3
+                        self.ip_scan_panel.scanning = False
+                        self.ip_input_mode          = False
 
                     elif self.ip_scan_state == 3:           # close panel
-                        self.ip_scan_state                   = 0
-                        self.ip_scan_mode                    = False
-                        self.ip_scan_panel.scan_done         = False   # reset for next run
-
-
+                        self.ip_scan_state           = 0
+                        self.ip_scan_mode            = False
+                        self.ip_scan_panel.scan_done = False
     # ── Main run loop ─────────────────────────────────────────────────────────
 
     def run(self):

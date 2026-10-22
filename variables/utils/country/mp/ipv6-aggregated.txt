@@ -1,0 +1,6 @@
+# Country: Northern Mariana Islands (MP)
+# Address family: IPv6
+# Delegation status: Allocated || Assigned
+# Export mode: Aggregated
+#
+2401:4e40::/32

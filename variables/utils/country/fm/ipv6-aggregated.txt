@@ -1,0 +1,7 @@
+# Country: Micronesia (FM)
+# Address family: IPv6
+# Delegation status: Allocated || Assigned
+# Export mode: Aggregated
+#
+2407:4800::/32
+2407:5c40::/32

@@ -1,0 +1,8 @@
+# Country: Equatorial Guinea (GQ)
+# Address family: IPv6
+# Delegation status: Allocated || Assigned
+# Export mode: Aggregated
+#
+2c0f:f180::/32
+2c0f:f840::/32
+2c0f:f8c0::/32

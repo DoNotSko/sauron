@@ -1,0 +1,6 @@
+# Country: St. Pierre & Miquelon (PM)
+# Address family: IPv6
+# Delegation status: Allocated || Assigned
+# Export mode: Aggregated
+#
+2604:ca40::/32

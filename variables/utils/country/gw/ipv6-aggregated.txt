@@ -1,0 +1,7 @@
+# Country: Guinea-Bissau (GW)
+# Address family: IPv6
+# Delegation status: Allocated || Assigned
+# Export mode: Aggregated
+#
+2c0f:ec50::/32
+2c0f:f928::/32

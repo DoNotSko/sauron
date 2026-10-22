@@ -1,0 +1,6 @@
+# Country: Norfolk Island (NF)
+# Address family: IPv6
+# Delegation status: Allocated || Assigned
+# Export mode: Aggregated
+#
+2001:df0:20c::/48

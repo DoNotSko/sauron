@@ -1,4 +1,4 @@
-import socket, random, ipaddress
+import socket, random, ipaddress, csv, json
 
 from threading              import Thread, Lock
 from concurrent.futures     import ThreadPoolExecutor
@@ -7,6 +7,8 @@ from pathlib                import Path
 from pybloom_live           import BloomFilter
 
 base_dir = Path(__file__).resolve().parent
+project_dir = base_dir.parent
+data_dir = project_dir / "variables" / "utils" / "country"
 
 class SaveIps:
 
@@ -44,6 +46,34 @@ class SaveIps:
 
 class MassIPScanner:
 
+    @staticmethod
+    def _load_country_blocks(data_dir):
+        country_blocks = []
+
+        for json_path in data_dir.glob("*/*.json"):
+            country = json_path.parent.name
+
+            with json_path.open(encoding="utf-8") as f:
+                data = json.load(f)
+
+            prefixes = data["prefixes"]
+
+            if isinstance(prefixes, dict):
+                cidrs = [
+                    cidr
+                    for prefix_list in prefixes.values()
+                    for cidr in prefix_list
+                ]
+            else:
+                cidrs = prefixes
+
+            for cidr in cidrs:
+                network = ipaddress.ip_network(cidr, strict=False)
+                country_blocks.append((country, network))
+
+        return country_blocks
+
+
     def __init__(self):
         
         self.scanning       = False
@@ -54,7 +84,6 @@ class MassIPScanner:
         self.found          = []
         self.errors         = 0
 
-        self.country        = None
         self.ports          = [7, 19, 20, 21, 22, 23, 25, 42, 43, 49, 53, 67, 68, 69, 70, 79, 80, 88,
                                 102, 110, 113, 119, 123, 135, 137, 138, 139, 143, 161, 162, 177, 179,
                                 194, 201, 264, 318, 381, 383, 389, 411, 412, 427, 443, 445, 464, 465,
@@ -71,6 +100,7 @@ class MassIPScanner:
         
 
         self.blocks         = []
+        self.country_blocks = self._load_country_blocks(data_dir)
         self.ip_pool        = []
         self.lock           = Lock()
         verbose             = False
@@ -112,7 +142,7 @@ class MassIPScanner:
         except Exception as e:
             return f"error: ip exception {e}"
     
-
+    
 
     def _make_random_ip(self):
         try:
@@ -145,6 +175,17 @@ class MassIPScanner:
             return self._track_ip_blocks()
         
         return self._make_random_ip()
+
+    def _country_for_ip(self, ip):
+        address = ipaddress.ip_address(ip)
+
+        matches = [
+            (network.prefixlen, country)
+            for country, network in self.country_blocks
+            if address.version == network.version and address in network
+        ]
+
+        return max(matches)[1] if matches else None
 
 
 
@@ -179,6 +220,16 @@ class MassIPScanner:
                 break
             self._validate_ip(ip)
     
+    def blocks_for_country(self, country):
+        if not country:
+            return []
+
+        return [
+            str(network)
+            for block_country, network in self.country_blocks
+            if block_country.casefold() == country.casefold()
+        ]
+
 
 
     def run(self, ports=None, threads=None, blocks=None):
@@ -200,7 +251,7 @@ class MassIPScanner:
         if threads:
             self.threads    = threads
         
-        if blocks:
+        if blocks is not None:
             self.blocks     = list(blocks)
         
 
@@ -241,6 +292,3 @@ class MassIPScanner:
     
 
 mass_ip_scanner = MassIPScanner()
-
-  
-

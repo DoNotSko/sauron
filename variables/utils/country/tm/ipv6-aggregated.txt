@@ -1,0 +1,8 @@
+# Country: Turkmenistan (TM)
+# Address family: IPv6
+# Delegation status: Allocated || Assigned
+# Export mode: Aggregated
+#
+2001:7f8:165::/48
+2a05:2180::/29
+2a14:340::/29

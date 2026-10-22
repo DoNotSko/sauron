@@ -1,0 +1,7 @@
+# Country: Niue (NU)
+# Address family: IPv6
+# Delegation status: Allocated || Assigned
+# Export mode: Aggregated
+#
+2001:df0:8c::/48
+2402:1220::/32

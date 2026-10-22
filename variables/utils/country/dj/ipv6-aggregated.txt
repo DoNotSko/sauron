@@ -1,0 +1,8 @@
+# Country: Djibouti (DJ)
+# Address family: IPv6
+# Delegation status: Allocated || Assigned
+# Export mode: Aggregated
+#
+2001:4298::/32
+2001:43f8:9c0::/47
+2c0f:44c0::/32

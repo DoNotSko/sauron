@@ -1,0 +1,6 @@
+# Country: Tuvalu (TV)
+# Address family: IPv4
+# Delegation status: Allocated || Assigned
+# Export mode: Aggregated
+#
+202.2.96.0/19
