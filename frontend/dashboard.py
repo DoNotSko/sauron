@@ -578,7 +578,7 @@ class Dashboard:
             blocks   = getattr(p, "scanned_blocks",0)
 
             lines += [
-                f"  Scanned  : {scanned:,}",~
+                f"  Scanned  : {scanned:,}",
                 f"  Online   : {online:,}",
                 f"  Hit Rate : {hit_rate}",
                 f"  Offline  : {errors:,}",
